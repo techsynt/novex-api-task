@@ -1,7 +1,7 @@
 FROM php:8.2-fpm
 
 #Set the working dir
-WORKDIR /srv/app
+WORKDIR /srv
 
 
 # Install system dependencies and required tools
