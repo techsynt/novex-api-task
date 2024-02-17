@@ -17,8 +17,7 @@ services:
       dockerfile: docker/php/Dockerfile
     volumes:
       - '.:/srv'
-    entrypoint: ["sh", "-c", "composer install && php bin/console doctrine:migrations:migrate --no-interaction"]
-
+      
   db:
     image: postgres:${POSTGRES_VERSION:-15}-alpine
     environment:
