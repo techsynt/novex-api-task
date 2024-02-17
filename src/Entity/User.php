@@ -76,14 +76,8 @@ class User
     private ?string $name = null;
 
     #[ApiProperty(example: 28)]
-    #[Assert\NotBlank]
     #[Assert\Type('integer')]
-    #[Assert\Range(
-        notInRangeMessage: 'Возраст не может быть отрицательным или больше {{ max }}',
-        min: 0,
-        max: 150,
-    )]
-    #[Groups(['read', 'write'])]
+    #[Groups(['read'])]
     #[ORM\Column]
     private ?int $age = null;
 
@@ -93,12 +87,14 @@ class User
     #[ORM\Column(length: 255)]
     private ?string $sex = null;
 
-    #[ApiProperty(example: '2024-02-16', openapiContext: ['type' => 'string', 'format' => 'date'])]
-    #[Assert\Date(message: 'Неверный формат даты')]
-    #[Assert\LessThan('today', message: 'День рождения не может быть в будущем')]
+    #[Assert\LessThanOrEqual(
+        value: 'today',
+        message: 'День рождения не может быть в будущем'
+    )]
     #[Groups(['read', 'write'])]
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $birthday = null;
+    #[ApiProperty(example: '2022-02-16', openapiContext: ['type' => 'string', 'format' => 'date'])]
+    private ?\DateTimeInterface $birthday;
 
     #[ApiProperty(example: '+7(928)784-84-98')]
     #[AssertPhoneNumber()]
@@ -153,9 +149,10 @@ class User
         return $this->age;
     }
 
-    public function setAge(int $age): static
+    #[ORM\PrePersist]
+    public function setAge(): static
     {
-        $this->age = $age;
+        $this->age = $this->getBirthdayDate()->diff(new \DateTime())->y;
 
         return $this;
     }
@@ -172,9 +169,14 @@ class User
         return $this;
     }
 
-    public function getBirthday(): ?\DateTimeInterface
+    public function getBirthdayDate(): \DateTimeInterface
     {
         return $this->birthday;
+    }
+
+    public function getBirthday(): string
+    {
+        return $this->birthday->format('Y-m-d');
     }
 
     public function setBirthday(\DateTimeInterface $birthday): static
