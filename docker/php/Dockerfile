@@ -9,6 +9,9 @@ WORKDIR /srv
 RUN apt-get update && \
     apt-get install -y libpq-dev
 
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
+
 # Install PHP extensions
 RUN  docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql && \
      docker-php-ext-install pdo_pgsql pgsql opcache
