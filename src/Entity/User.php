@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
+#[ORM\HasLifecycleCallbacks]
 class User
 {
     #[ORM\Id]
@@ -38,6 +39,11 @@ class User
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $updatedAt = null;
+
+    public function __construct()
+    {
+        $this->createdAt = new \DateTimeImmutable();
+    }
 
     public function getId(): ?int
     {
@@ -73,9 +79,10 @@ class User
         return $this->age;
     }
 
-    public function setAge(int $age): static
+    #[ORM\PrePersist]
+    public function setAge(): static
     {
-        $this->age = $age;
+        $this->age = $this->getBirthday()->diff(new \DateTime())->y;
 
         return $this;
     }
@@ -133,6 +140,7 @@ class User
         return $this->updatedAt;
     }
 
+    #[ORM\PreUpdate]
     public function setUpdatedAt(?\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
