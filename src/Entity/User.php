@@ -5,10 +5,14 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Misd\PhoneNumberBundle\Validator\Constraints\PhoneNumber as AssertPhoneNumber;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ORM\Table(name: '`user`')]
+#[ORM\Table(name: '`users`')]
 #[ORM\HasLifecycleCallbacks]
+#[UniqueEntity(fields: ['email'], message: 'Эта почта уже используется')]
 class User
 {
     #[ORM\Id]
@@ -16,21 +20,42 @@ class User
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Поле name не может быть пустым')]
+    #[Assert\Email]
+    #[ORM\Column(name: 'email', length: 255, unique: true)]
     private ?string $email = null;
 
+    #[Assert\Type('string')]
+    #[Assert\Length(
+        min: 2,
+        max: 255,
+    )]
+    #[Assert\Regex(
+        pattern: '/^[A-Za-zА-Яа-яЁё-]+$/u',
+        message: 'Имя должно содержать только буквы и тире'
+    )]
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
+    #[Assert\Type('integer')]
     #[ORM\Column]
     private ?int $age = null;
 
+    #[Assert\NotBlank(message: 'Поле sex не может быть пустым')]
+    #[Assert\Choice(['Male', 'Female'], message: 'Пол может быть только "Male" или "Female"')]
     #[ORM\Column(length: 255)]
     private ?string $sex = null;
 
+    #[Assert\NotBlank(message: 'Поле birthday не может быть пустым')]
+    #[Assert\LessThanOrEqual(
+        value: 'today',
+        message: 'День рождения не может быть в будущем'
+    )]
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $birthday = null;
 
+    #[Assert\NotBlank(message: 'Поле phone не может быть пустым')]
+    #[AssertPhoneNumber()]
     #[ORM\Column(length: 255)]
     private ?string $phone = null;
 
