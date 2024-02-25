@@ -80,7 +80,7 @@ class UserService
             throw new EntityNotFoundException();
         }
 
-        return $this->userRepository->findAll();
+        return $users;
     }
 
 
@@ -91,12 +91,11 @@ class UserService
     public function delete(int $id): void
     {
         $user = $this->userRepository->find($id);
-        if (null != $user) {
-            $this->em->remove($user);
-            $this->em->flush();
-        } else {
+        if (!$user) {
             throw new EntityNotFoundException();
         }
+        $this->em->remove($user);
+        $this->em->flush();
     }
 
     /**

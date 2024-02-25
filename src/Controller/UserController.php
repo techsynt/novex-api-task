@@ -22,6 +22,23 @@ class UserController extends AbstractController
     ) {
     }
 
+    private function buildResponse(string $status, int $statusCode, $errors = null, $data = null): JsonResponse
+    {
+        if ($status == 'failed') {
+            return new JsonResponse(
+                [
+                    'status' => $status,
+                    'errors' => $errors,
+                ],
+                $statusCode
+            );
+        }
+        return $this->json([
+            'status' => $status,
+            'data' => $data,
+        ]);
+    }
+
     #[OA\Post(
         summary: 'Добавляет нового пользователя',
         requestBody: new OA\RequestBody(
@@ -86,13 +103,7 @@ class UserController extends AbstractController
 
             return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         } catch (EntityNotFoundException $e) {
-            return new JsonResponse(
-                [
-                    'status' => 'failed',
-                    'errors' => 'Пользователь не найден',
-                ],
-                Response::HTTP_NOT_FOUND
-            );
+            return $this->buildResponse('failed', 404, 'Пользователь не найден');
         }
     }
 
@@ -122,19 +133,10 @@ class UserController extends AbstractController
         try {
             $user = $userService->get($id);
         } catch (EntityNotFoundException $e) {
-            return new JsonResponse(
-                [
-                    'status' => 'failed',
-                    'errors' => 'Пользователь не найден',
-                ],
-                Response::HTTP_NOT_FOUND
-            );
+            return $this->buildResponse('failed', 404, 'Пользователь не найден');
         }
 
-        return $this->json([
-            'status' => 'success',
-            'data' => $user,
-        ]);
+        return $this->buildResponse('success', 200, null, $user);
     }
 
     #[OA\Get(
@@ -155,19 +157,9 @@ class UserController extends AbstractController
         try {
             $users = $userService->list();
         } catch (EntityNotFoundException $e) {
-            return new JsonResponse(
-                [
-                    'status' => 'failed',
-                    'errors' => 'Пользователи не найдены',
-                ],
-                Response::HTTP_NOT_FOUND
-            );
+            return $this->buildResponse('failed', 404, 'Пользователи не найдены');
         }
-
-        return $this->json([
-            'status' => 'success',
-            'data' => $users,
-        ]);
+        return $this->buildResponse('success', 200, null, $users);
     }
 
     #[OA\Put(
@@ -214,13 +206,7 @@ class UserController extends AbstractController
                 Response::HTTP_BAD_REQUEST
             );
         } catch (EntityNotFoundException $e) {
-            return new JsonResponse(
-                [
-                    'status' => 'failed',
-                    'errors' => 'Пользователь не найден',
-                ],
-                Response::HTTP_NOT_FOUND
-            );
+            return $this->buildResponse('failed', 404, 'Пользователь не найден');
         }
 
         return new JsonResponse(['status' => 'success'], Response::HTTP_OK);
