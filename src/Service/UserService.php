@@ -100,6 +100,7 @@ class UserService
 
     /**
      * @param Request $request
+     * @param int $id
      * @return void
      * @throws \Exception
      */
