@@ -40,6 +40,10 @@ class UserService
         return $formattedErrors;
     }
 
+    /**
+     * @param Request $request
+     * @return void
+     */
     public function create(Request $request): void
     {
         $user = $this->deserialize($request);
@@ -52,16 +56,38 @@ class UserService
         $this->em->flush();
     }
 
+    /**
+     * @param $id
+     * @return User
+     */
     public function get($id): User
     {
         $user = $this->userRepository->find($id);
         if (!$user) {
-            throw new EntityNotFoundException('Пользователь не найден');
+            throw new EntityNotFoundException();
         }
 
         return $user;
     }
 
+    /**
+     * @return array
+     */
+    public function list(): array
+    {
+        $users = $this->userRepository->findAll();
+        if (!$users) {
+            throw new EntityNotFoundException();
+        }
+
+        return $this->userRepository->findAll();
+    }
+
+
+    /**
+     * @param int $id
+     * @return void
+     */
     public function delete(int $id): void
     {
         $user = $this->userRepository->find($id);
@@ -69,11 +95,13 @@ class UserService
             $this->em->remove($user);
             $this->em->flush();
         } else {
-            throw new EntityNotFoundException('Пользователь не найден');
+            throw new EntityNotFoundException();
         }
     }
 
     /**
+     * @param Request $request
+     * @return void
      * @throws \Exception
      */
     public function update(Request $request): void
@@ -94,13 +122,6 @@ class UserService
         if ($validationResult) {
             throw new ValidatorException(json_encode($validationResult));
         }
-        //        dd($userData);
-        //        foreach ($userData as $key => $value) {
-        //            $setterMethod = 'set'.ucfirst($key);
-        //            if (method_exists($user, $setterMethod)) {
-        //                $user->$setterMethod($value);
-        //            }
-        //        }
         $this->em->flush();
     }
 }

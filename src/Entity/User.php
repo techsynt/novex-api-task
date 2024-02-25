@@ -6,6 +6,7 @@ use App\Repository\UserRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Misd\PhoneNumberBundle\Validator\Constraints\PhoneNumber as AssertPhoneNumber;
+use OpenApi\Attributes as OA;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -13,8 +14,12 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Table(name: '`users`')]
 #[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(fields: ['email'], message: 'Эта почта уже используется')]
+#[UniqueEntity(fields: ['phone'], message: 'Этот телефон уже используется')]
 class User
 {
+    #[OA\Property(
+        readOnly: true
+    )]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -37,6 +42,9 @@ class User
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
+    #[OA\Property(
+        readOnly: true
+    )]
     #[Assert\Type('integer')]
     #[ORM\Column]
     private ?int $age = null;
@@ -59,9 +67,15 @@ class User
     #[ORM\Column(length: 255)]
     private ?string $phone = null;
 
+    #[OA\Property(
+        readOnly: true
+    )]
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
+    #[OA\Property(
+        readOnly: true
+    )]
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $updatedAt = null;
 
