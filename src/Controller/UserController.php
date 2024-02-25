@@ -10,7 +10,6 @@ use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Exception\ValidatorException;
 
@@ -22,9 +21,13 @@ class UserController extends AbstractController
     ) {
     }
 
-    private function buildResponse(string $status, int $statusCode, $errors = null, $data = null): JsonResponse
-    {
-        if ($status == 'failed') {
+    private function buildResponse(
+        string $status = 'success',
+        $errors = null,
+        $data = null,
+        int $statusCode = 200
+    ): JsonResponse {
+        if ($status === 'failed') {
             return new JsonResponse(
                 [
                     'status' => $status,
@@ -63,16 +66,15 @@ class UserController extends AbstractController
         try {
             $this->userService->create($request);
         } catch (ValidatorException $e) {
-            return new JsonResponse(
-                [
-                'status' => 'failed',
-                'errors' => json_decode($e->getMessage(), true),
-                ],
-                Response::HTTP_BAD_REQUEST
+            return $this->buildResponse(
+                'failed',
+                json_decode($e->getMessage(), true),
+                null,
+                400
             );
         }
 
-        return new JsonResponse(['status' => 'success'], Response::HTTP_CREATED);
+        return $this->buildResponse();
     }
 
     #[OA\Delete(
@@ -90,6 +92,10 @@ class UserController extends AbstractController
                 response: 404,
                 description: 'Пользователь не найден',
             ),
+            new OA\Response(
+                response: 400,
+                description: 'Неправильный id',
+            ),
              new OA\Response(
                  response: 204,
                  description: 'Пользователь успешно удален'
@@ -101,9 +107,11 @@ class UserController extends AbstractController
         try {
             $userService->delete($id);
 
-            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+            return $this->buildResponse(statusCode: 204);
         } catch (EntityNotFoundException $e) {
-            return $this->buildResponse('failed', 404, 'Пользователь не найден');
+            return $this->buildResponse('failed', 'Пользователь не найден', statusCode: 404);
+        } catch (\TypeError $e) {
+            return $this->buildResponse('failed', 'Передан неправильный id', statusCode: 400);
         }
     }
 
@@ -125,6 +133,10 @@ class UserController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Пользователь успешно получен'
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Неправильный id'
             )]
     )]
     #[Route('/user/{id}', methods: ['GET'])]
@@ -133,10 +145,12 @@ class UserController extends AbstractController
         try {
             $user = $userService->get($id);
         } catch (EntityNotFoundException $e) {
-            return $this->buildResponse('failed', 404, 'Пользователь не найден');
+            return $this->buildResponse('failed', 'Пользователь не найден', statusCode: 404);
+        } catch (\TypeError $e) {
+            return $this->buildResponse('failed', 'Передан неправильный id', statusCode: 400);
         }
 
-        return $this->buildResponse('success', 200, null, $user);
+        return $this->buildResponse(data: $user);
     }
 
     #[OA\Get(
@@ -157,9 +171,9 @@ class UserController extends AbstractController
         try {
             $users = $userService->list();
         } catch (EntityNotFoundException $e) {
-            return $this->buildResponse('failed', 404, 'Пользователи не найдены');
+            return $this->buildResponse('failed', 'Пользователи не найдены', statusCode: 404);
         }
-        return $this->buildResponse('success', 200, null, $users);
+        return $this->buildResponse(data: $users);
     }
 
     #[OA\Put(
@@ -184,8 +198,12 @@ class UserController extends AbstractController
                 description: 'Пользователь не найден',
             ),
             new OA\Response(
-                response: 400,
+                response: 422,
                 description: 'Ошибка валидации',
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Неправильный id',
             ),
             new OA\Response(
                 response: 200,
@@ -193,22 +211,18 @@ class UserController extends AbstractController
             )]
     )]
     #[Route('/user/{id}', methods: ['PUT'])]
-    public function update(Request $request): JsonResponse
+    public function update(Request $request, $id): JsonResponse
     {
         try {
-            $this->userService->update($request);
+            $this->userService->update($request, $id);
+        } catch (\TypeError $e) {
+            return $this->buildResponse('failed', 'Передан неправильный id', statusCode: 400);
         } catch (ValidatorException $e) {
-            return new JsonResponse(
-                [
-                'status' => 'failed',
-                'errors' => json_decode($e->getMessage(), true),
-            ],
-                Response::HTTP_BAD_REQUEST
-            );
+            return $this->buildResponse('failed', json_decode($e->getMessage(), true), statusCode: 422);
         } catch (EntityNotFoundException $e) {
-            return $this->buildResponse('failed', 404, 'Пользователь не найден');
+            return $this->buildResponse('failed', 'Пользователь не найден', statusCode: 404);
         }
 
-        return new JsonResponse(['status' => 'success'], Response::HTTP_OK);
+        return $this->buildResponse();
     }
 }

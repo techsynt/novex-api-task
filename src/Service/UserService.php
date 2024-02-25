@@ -57,10 +57,10 @@ class UserService
     }
 
     /**
-     * @param $id
+     * @param int $id
      * @return User
      */
-    public function get($id): User
+    public function get(int $id): User
     {
         $user = $this->userRepository->find($id);
         if (!$user) {
@@ -103,10 +103,10 @@ class UserService
      * @return void
      * @throws \Exception
      */
-    public function update(Request $request): void
+    public function update(Request $request, int $id): void
     {
         $userData = json_decode($request->getContent(), true);
-        $user = $this->userRepository->find($request->get('id'));
+        $user = $this->userRepository->find($id);
         if (!$user) {
             throw new EntityNotFoundException();
         }
